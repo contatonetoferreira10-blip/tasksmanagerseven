@@ -381,6 +381,22 @@
     });
   }
 
+  /* O backup semanal só funciona se alguém lembrar dele — então o app lembra.
+     Conta a partir do último export, ou do primeiro evento registrado. */
+  function syncBackupNudge() {
+    var btn = $('#btnBackup');
+    var base = state.lastExport ||
+               ((state.log && state.log.length) ? state.log[0].d : todayISO());
+    var dias = -daysUntil(base);
+    if (dias < 7) { btn.hidden = true; return; }
+    btn.hidden = false;
+    btn.classList.toggle('late', dias >= 14);
+    $('#btnBackupTxt').textContent = 'backup há ' + dias + 'd';
+    btn.title = state.lastExport
+      ? 'Último backup em ' + state.lastExport.split('-').reverse().join('/') + '. Clique para exportar agora.'
+      : 'Você ainda não exportou nenhum backup. Clique para exportar agora.';
+  }
+
   function syncTopbar() {
     var clientes = view === 'clientes';
     $('.scope-filter').hidden = clientes;
@@ -391,6 +407,7 @@
     $$('[data-view-main]').forEach(function (b) {
       b.classList.toggle('is-on', b.dataset.viewMain === view);
     });
+    syncBackupNudge();
   }
 
   function setView(v) {
@@ -851,8 +868,11 @@
       openHistory();
     } else if (act === 'export') {
       menu.hidden = true;
+      state.lastExport = todayISO();
+      save();
       download('tasks-seven-' + todayISO() + '.json', Store.export(state));
-      toast('Backup exportado.');
+      syncBackupNudge();
+      toast('Backup exportado. Guarde numa pasta que sincroniza (Drive, OneDrive).');
     } else if (act === 'import') {
       menu.hidden = true;
       $('#fileImport').click();
@@ -942,6 +962,8 @@
       render();
     });
   });
+
+  $('#btnBackup').addEventListener('click', function () { handleMenu('export'); });
 
   $('#btnMenu').addEventListener('click', function (e) {
     e.stopPropagation();

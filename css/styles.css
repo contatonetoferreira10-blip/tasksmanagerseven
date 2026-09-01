@@ -375,3 +375,11 @@ kbd{font:600 10px/1 Inter,sans-serif;padding:3px 5px;border-radius:5px;backgroun
 .cli-row>span{flex:none;width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cli-row .rate{flex:1;margin-top:0}
 .cli-row b{flex:none;width:24px;text-align:right;color:var(--violet-200)}
+
+/* aviso de backup atrasado */
+.btn.nudge{padding:8px 13px;font-size:12px;font-weight:600;
+  border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.1);color:#fbbf24}
+.btn.nudge:hover{border-color:rgba(251,191,36,.6);background:rgba(251,191,36,.16)}
+.btn.nudge .ico{width:15px;height:15px}
+.btn.nudge.late{border-color:rgba(251,113,133,.4);background:rgba(251,113,133,.12);color:var(--danger)}
+.btn.nudge.late:hover{border-color:rgba(251,113,133,.65);background:rgba(251,113,133,.18)}
