@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TASKS SEVEN — gestor de tarefas</title>
+<meta name="description" content="Gestor de tarefas em kanban com rotinas diárias e semanais, painel de desempenho e acompanhamento de saúde de clientes.">
+<meta name="theme-color" content="#070410">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%237c3aed%27/%3E%3Cg fill=%27%23ddd6fe%27%3E%3Crect x=%278%27 y=%277%27 width=%274%27 height=%2718%27 rx=%272%27/%3E%3Crect x=%2714%27 y=%2714%27 width=%274%27 height=%2711%27 rx=%272%27/%3E%3Crect x=%2720%27 y=%2710%27 width=%274%27 height=%2715%27 rx=%272%27/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true">
+  <span class="blob b1"></span>
+  <span class="blob b2"></span>
+  <span class="blob b3"></span>
+  <span class="grid"></span>
+</div>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>
+    <div class="brand-txt">
+      <strong>TASKS <em>SEVEN</em></strong>
+      <small id="brandSub">tarefas diárias e semanais</small>
+    </div>
+  </div>
+
+  <div class="viewswitch" role="tablist" aria-label="Visão">
+    <button class="vs is-on" data-view-main="tarefas" role="tab">Tarefas</button>
+    <button class="vs" data-view-main="clientes" role="tab">Clientes</button>
+  </div>
+
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/></svg>
+    <input id="search" type="search" placeholder="Buscar tarefa, tag, nota…  ( / )" autocomplete="off">
+  </div>
+
+  <div class="scope-filter" role="tablist" aria-label="Filtro">
+    <button class="chip is-on" data-view="tudo" role="tab">Tudo</button>
+    <button class="chip" data-view="hoje" role="tab">Hoje</button>
+    <button class="chip" data-view="rotinas" role="tab">Rotinas</button>
+    <button class="chip" data-view="atrasadas" role="tab">Atrasadas</button>
+  </div>
+
+  <div class="top-actions">
+    <div class="progress" title="Concluídas / total visível">
+      <svg viewBox="0 0 36 36" class="ring" aria-hidden="true">
+        <circle class="ring-bg" cx="18" cy="18" r="15.5"/>
+        <circle class="ring-fg" id="ringFg" cx="18" cy="18" r="15.5"/>
+      </svg>
+      <span id="progressTxt">0/0</span>
+    </div>
+    <button class="btn ghost" id="btnMenu" title="Dados e ajustes">
+      <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+    </button>
+    <button class="btn primary" id="btnNew">
+      <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span id="btnNewLabel">Nova tarefa</span> <kbd>N</kbd>
+    </button>
+  </div>
+
+  <div class="menu" id="menu" hidden>
+    <button data-act="clientes">Clientes</button>
+    <button data-act="stats">Desempenho</button>
+    <button data-act="history">Histórico e descanso</button>
+    <button data-act="export">Exportar backup (.json)</button>
+    <button data-act="import">Importar backup</button>
+    <button data-act="archive-done">Arquivar concluídas agora</button>
+    <button data-act="reset" class="danger">Zerar quadro</button>
+    <input type="file" id="fileImport" accept="application/json" hidden>
+  </div>
+</header>
+
+<main class="board" id="board"></main>
+
+<!-- ============ modal de tarefa ============ -->
+<div class="modal-backdrop" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <header>
+      <h2 id="modalTitle">Nova tarefa</h2>
+      <button class="btn ghost icon" id="btnClose" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+
+    <form id="taskForm" autocomplete="off">
+      <label class="field">
+        <span>Título</span>
+        <input id="fTitle" required maxlength="120" placeholder="Ex.: revisar campanhas do cliente X">
+      </label>
+
+      <label class="field">
+        <span>Notas</span>
+        <textarea id="fNotes" rows="3" placeholder="Contexto, checklist, links…"></textarea>
+      </label>
+
+      <label class="field">
+        <span>Tipo</span>
+        <div class="seg seg-3" id="fKind">
+          <button type="button" data-val="unica" class="is-on">Única</button>
+          <button type="button" data-val="diaria">Diária</button>
+          <button type="button" data-val="semanal">Semanal</button>
+        </div>
+        <small class="hint" id="kindHint"></small>
+      </label>
+
+      <div class="row">
+        <label class="field">
+          <span>Prioridade</span>
+          <div class="seg" id="fPriority">
+            <button type="button" data-val="baixa">Baixa</button>
+            <button type="button" data-val="media" class="is-on">Média</button>
+            <button type="button" data-val="alta">Alta</button>
+          </div>
+        </label>
+        <label class="field" id="dueField">
+          <span>Prazo</span>
+          <input id="fDue" type="date">
+        </label>
+      </div>
+
+      <div class="row">
+        <label class="field">
+          <span>Coluna</span>
+          <select id="fColumn"></select>
+        </label>
+        <label class="field">
+          <span>Cliente <small>digite pra criar</small></span>
+          <input id="fClient" list="clientList" maxlength="40" placeholder="—" autocomplete="off">
+          <datalist id="clientList"></datalist>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Tags <small>separadas por vírgula</small></span>
+        <input id="fTags" placeholder="meta ads, criativo">
+      </label>
+
+      <footer>
+        <button type="button" class="btn danger-ghost" id="btnDelete" hidden>Excluir</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" id="btnCancel">Cancelar</button>
+        <button type="submit" class="btn primary">Salvar</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<!-- ============ histórico ============ -->
+<div class="modal-backdrop" id="history" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="histTitle">
+    <header>
+      <h2 id="histTitle">Histórico e descanso</h2>
+      <button class="btn ghost icon" id="btnCloseHist" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="hist-body" id="histBody"></div>
+    <footer class="hist-foot">
+      <button type="button" class="btn danger-ghost" id="btnClearHist">Limpar histórico</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ============ cliente ============ -->
+<div class="modal-backdrop" id="clientModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cliTitle">
+    <header>
+      <h2 id="cliTitle">Cliente</h2>
+      <button class="btn ghost icon" id="btnCloseCli" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <form id="clientForm" autocomplete="off">
+      <label class="field">
+        <span>Nome</span>
+        <input id="cName" required maxlength="40" placeholder="Ex.: Clínica Vida">
+      </label>
+      <label class="field">
+        <span>Status</span>
+        <select id="cStatus"></select>
+      </label>
+      <label class="field">
+        <span>Notas</span>
+        <textarea id="cNotes" rows="3" placeholder="Contexto da conta, combinados, histórico…"></textarea>
+      </label>
+      <p class="cli-link" id="cliTasks"></p>
+      <footer>
+        <button type="button" class="btn danger-ghost" id="btnDeleteCli" hidden>Excluir</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" id="btnCancelCli">Cancelar</button>
+        <button type="submit" class="btn primary">Salvar</button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<!-- ============ desempenho ============ -->
+<div class="modal-backdrop" id="stats" hidden>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="statsTitle">
+    <header>
+      <h2 id="statsTitle">Desempenho</h2>
+      <button class="btn ghost icon" id="btnCloseStats" aria-label="Fechar">
+        <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </header>
+    <div class="hist-body" id="statsBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="js/store.js"></script>
+<script src="js/clients.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

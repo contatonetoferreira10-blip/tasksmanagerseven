@@ -1,0 +1,35 @@
+# ---- segredos e ambiente ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+credentials.json
+secrets.json
+service-account*.json
+
+# ---- dados do quadro (nunca versionar) ----
+# backups exportados pelo app carregam tarefas, clientes e histórico reais
+tasks-seven-*.json
+*.backup.json
+dados-*.json
+import-inicial.json
+
+# ---- customizações locais ----
+*.local.js
+*.local.json
+
+# ---- sistema e editores ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+
+# ---- node (caso um build entre no futuro) ----
+node_modules/
+dist/
+npm-debug.log*
+yarn-error.log*
