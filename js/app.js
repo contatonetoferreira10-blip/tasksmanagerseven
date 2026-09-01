@@ -110,6 +110,14 @@
     if (state.log.length > Store.LOG_CAP) state.log = state.log.slice(-Store.LOG_CAP);
   }
 
+  /* Em deploy, o navegador pode servir um index.html em cache junto com um JS
+     novo. Ligar evento em elemento inexistente derrubava o app inteiro; agora
+     a funcionalidade nova só não aparece até o HTML atualizar. */
+  function on(sel, ev, fn) {
+    var el = $(sel);
+    if (el) el.addEventListener(ev, fn);
+  }
+
   function clientName(id) {
     var c = Clients.byId(state, id);
     return c ? c.name : null;
@@ -385,6 +393,7 @@
      Conta a partir do último export, ou do primeiro evento registrado. */
   function syncBackupNudge() {
     var btn = $('#btnBackup');
+    if (!btn) return;
     var base = state.lastExport ||
                ((state.log && state.log.length) ? state.log[0].d : todayISO());
     var dias = -daysUntil(base);
@@ -963,7 +972,7 @@
     });
   });
 
-  $('#btnBackup').addEventListener('click', function () { handleMenu('export'); });
+  on('#btnBackup', 'click', function () { handleMenu('export'); });
 
   $('#btnMenu').addEventListener('click', function (e) {
     e.stopPropagation();
